@@ -47,10 +47,10 @@ class ErrorHandler:
         redo_courses = args[1]
         optional_courses = args[2]
         unavailable = args[3]
-        msg,err_codes = check_year(year,msg,err_codes)
-        msg,err_codes = check_courses(1,redo_courses,msg,err_codes)
-        msg,err_codes = check_courses(2,optional_courses,msg,err_codes)
-        msg,err_codes = check_times(unavailable,msg,err_codes)
+        msg,err_codes = self.check_year(year,msg,err_codes)
+        msg,err_codes = self.check_courses(1,redo_courses,msg,err_codes)
+        msg,err_codes = self.check_courses(2,optional_courses,msg,err_codes)
+        msg,err_codes = self.check_times(unavailable,msg,err_codes)
         return msg,err_codes
 
     def fix_args(self,args,err_codes):
@@ -89,7 +89,7 @@ class ErrorHandler:
         return year,redo_courses,optional_courses,unavailable
 
     def args_controller(self,user_args):
-        arg_check_response = check_args(user_args)
+        arg_check_response = self.check_args(user_args)
         err_msg = arg_check_response[0]
         err_codes = arg_check_response[1]
         while err_msg != "":
@@ -97,8 +97,8 @@ class ErrorHandler:
             gui.print_title("Would you like to fix issues ? y/n")
             command = input(">>>").lower()
             if command != "n":
-                user_args = fix_args(user_args,err_codes)
-                arg_check_response = check_args(user_args)
+                user_args = self.fix_args(user_args,err_codes)
+                arg_check_response = self.check_args(user_args)
                 err_msg = arg_check_response[0]
                 err_codes = arg_check_response[1]
             else:
