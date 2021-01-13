@@ -1,4 +1,5 @@
 import gui
+import data
 class ErrorHandler:
     def check_year(self,year,msg,err_codes):
         try:
@@ -18,7 +19,6 @@ class ErrorHandler:
         return msg,err_codes
 
     def check_times(self,times,msg,err_codes):
-        DAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"]
         for time in times:
             has_err = False
             try:
@@ -27,7 +27,7 @@ class ErrorHandler:
                 day = form[0].strip()
                 start_hour = hours[0].strip()
                 end_hour = hours[1].strip()
-                if day not in DAYS:
+                if day not in data.DAYS:
                     has_err = True
                 start_hour = int(start_hour)%24
                 end_hour = int(end_hour)%24   

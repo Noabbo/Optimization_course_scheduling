@@ -41,4 +41,4 @@ def print_schedule():
     print("Printing Schedule")
 
 def admin_page():
-    print_title("[1]. Auto insert in collection\n[2]. Find\n[3]. Clear\n[4]. Break")
+    print_title("[1]. Auto insert\n[2]. Clear Collection\n[3]. Break")

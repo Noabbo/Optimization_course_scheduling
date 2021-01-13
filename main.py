@@ -14,8 +14,10 @@ if user_args != "admin":
     else:
         client = client.Client(data[0],data[1],data[2],data[3])
         db_controller = db_controller.DataBaseController()
-        user.User(client,db_controller).run()
+        local_data.CLIENT = client
+        user.User(db_controller).run()
 else:
     client = client.Client(0,[],[],[])
     db_controller = db_controller.DataBaseController()
-    admin.Admin(client,db_controller).run()
+    local_data.CLIENT = client
+    admin.Admin(db_controller).run()
