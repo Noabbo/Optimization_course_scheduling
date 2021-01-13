@@ -1,5 +1,5 @@
 import db_controller
 class Data:
-  def __init__(self, client):
+  def __init__(self, client,cluster):
       self.client = client
-      self.local = db_controller.pull()
+      self.cluster = cluster

@@ -1,6 +1,10 @@
 str_y_n = " ? y/n"
 
 def welcome_page():
+    print_title("Would you like to enter as admin? " + str_y_n)
+    command = input(">>>")
+    if command != 'n':
+        return "admin"
     print_title("Please insert your current year number")
     year = input(">>>")
     redo_courses = []
@@ -35,3 +39,6 @@ def print_error(msg):
 
 def print_schedule():
     print("Printing Schedule")
+
+def admin_page():
+    print_title("[1]. Auto insert in collection\n[2]. Find\n[3]. Clear\n[4]. Break")
