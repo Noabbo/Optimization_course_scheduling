@@ -1,23 +1,18 @@
 import gui
 import error_handler
-import client
-import data as local_data
+import data
 import db_controller
 import admin
 import user
-user_args = gui.welcome_page()
-if user_args != "admin":
-    error_handler = error_handler.ErrorHandler()
-    status,data = error_handler.args_controller(user_args)
+appData = data.Data()
+error_handler = error_handler.ErrorHandler()
+gui.welcome_page(appData)
+if appData.user_args != appData.ADMIN_KEY:
+    status = error_handler.args_controller(appData)
     if status == 0 :
         exit(status)
-    else:
-        client = client.Client(data[0],data[1],data[2],data[3])
-        db_controller = db_controller.DataBaseController()
-        local_data.CLIENT = client
-        user.User(db_controller).run()
+    appData.set_db_controller(db_controller.DataBaseController())
+    user.User(appData).run()
 else:
-    client = client.Client(0,[],[],[])
-    db_controller = db_controller.DataBaseController()
-    local_data.CLIENT = client
-    admin.Admin(db_controller).run()
+    appData.set_db_controller(db_controller.DataBaseController())
+    admin.Admin(appData).run()

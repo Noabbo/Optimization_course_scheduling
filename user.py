@@ -1,6 +1,7 @@
 class User():
-    def __init__(self,db_controller):
-        self.db_controller = db_controller
+    def __init__(self,appData):
+        self.appData = appData
     
     def run(self):
-        print("user run")
+        self.appData.db_controller.pull(self.appData)
+        print(self.appData.local)
