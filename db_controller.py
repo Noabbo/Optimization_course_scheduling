@@ -24,3 +24,9 @@ class DataBaseController:
             appData.local = self.collection.find({})
         except Exception:
             gui.print_error("Something went wrong while pulling from DB")
+    
+    def find(self,appData,value):
+        try:
+            appData.buffer = self.collection.find(value)
+        except Exception:
+            gui.print_error("Something went wrong while searching in DB")

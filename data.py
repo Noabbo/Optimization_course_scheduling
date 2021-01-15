@@ -1,4 +1,5 @@
 import random
+
 # Course number first year : 1 - 73
 # Course number second year : 74 - 118
 # Course number third year : 119 - 128
@@ -78,5 +79,3 @@ class Data:
 
   def set_user_args(self,user_args):
     self.user_args = user_args
-
-  
