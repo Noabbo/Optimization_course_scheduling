@@ -4,7 +4,6 @@ import data
 import db_controller
 import admin
 import user
-import schedule
 appData = data.Data()
 error_handler = error_handler.ErrorHandler()
 gui.welcome_page(appData)

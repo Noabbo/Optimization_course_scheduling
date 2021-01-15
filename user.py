@@ -5,11 +5,13 @@ class User():
         self.appData = appData
     
     def run(self):
+        gui.print_title("System collecting data ... please wait")
         status,msg = self.preprocess()
         if status == 0:
             gui.print_error(msg)
         else:
-            print("we can continue to 2nd phase")
+            gui.print_title("Data collection finished. Optimizing ...")
+            self.optimize()
             
     def preprocess(self):
         ## INIT ##
@@ -53,10 +55,7 @@ class User():
         if len(all_courses) >= 74:
             return 0, "Total number of courses is greater than size of schedule"       
         self.appData.local = all_courses
-        print(len(self.appData.local))
         return 1, ""
-
-
     def filter_redo_courses(self,redo_courses,year):
         remove_list = []
         for course in redo_courses:
@@ -65,11 +64,8 @@ class User():
 
         for course in remove_list:
             if course in redo_courses:
-                redo_courses.remove(course)
-                gui.print_body("Removed " + str(course.number) + " from redo courses list")
-        
+                redo_courses.remove(course)        
         remove_list.clear()  
-
     def filter_optional_courses(self,redo_courses,optional_courses):
         remove_list = []
         for course in optional_courses:
@@ -78,7 +74,6 @@ class User():
         for course in remove_list:
             if course in optional_courses:
                 optional_courses.remove(course)
-                gui.print_body("Removed " + str(course.number) + " from optional courses list")      
         remove_list.clear()
         for redo_course in redo_courses:
             for optional_course in optional_courses:
@@ -87,28 +82,19 @@ class User():
         for course in remove_list:
             if course in optional_courses:
                 optional_courses.remove(course)
-                gui.print_body("Removed " + str(course.number) + " from optional courses list")
-        remove_list.clear()
-        
+        remove_list.clear()        
     def filter_all_courses(self,all_courses,redo_courses,optional_courses,year):
         _remove = []
         for course in all_courses:
             if course.year != year or course.year == 0:
-                _remove.append(course)
-        
+                _remove.append(course)        
         for course in _remove:
-            all_courses.remove(course)
-            gui.print_body("Removed " + str(course.number) + " from year " + str(course.year))
-
-        
-        _remove.clear()
-
+            if course in all_courses:   
+                all_courses.remove(course)        
         for course in redo_courses:
-            all_courses.append(course)
-        
+            all_courses.append(course)        
         for course in optional_courses:
             all_courses.append(course)
-
     def filter_groups(self,all_courses,unavailable):
         remove_list = []
         for course in all_courses:
@@ -117,16 +103,12 @@ class User():
             if len(course.groups) == 0 and course.is_must == True:
                 return 0,"Course " + str(course.number) + " has 0 groups available"
             if len(course.groups) == 0 and course.is_must == False and course not in remove_list:
-                remove_list.append(course)
-        
+                remove_list.append(course)     
         for course in remove_list:
             if course in all_courses:
-                gui.print_body("Removed " + str(course.number) + " which has 0 groups")
                 all_courses.remove(course)
-
-        remove_list.clear()
-
     def filter_clashes(self,all_courses):
+
         remove_list = []
         size = len(all_courses)
         for i in range(0,size):
@@ -143,6 +125,7 @@ class User():
                 elif second_course.is_must == True:
                     if first_course not in remove_list:
                         remove_list.append(first_course)
+                # Both courses are choice
                 else:
                     if first_course.rating > second_course.rating:
                         if second_course not in remove_list:
@@ -161,6 +144,7 @@ class User():
 
         for course in remove_list:
             if course in all_courses:
-                gui.print_body("Removed " + str(course.number) + " which doesn't fit with other courses")
                 all_courses.remove(course)
-        remove_list.clear()
+
+    def optimize(self):
+        print("")

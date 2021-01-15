@@ -26,8 +26,7 @@ def welcome_page(appData):
             if course == 'r':
                 break
             optional_courses.append(course)
-        print_title("Please enter days and hours in those days you cant study ex. sunday 8-14"
-                    + " Press 'r' to finish")
+        print_title("Enter times you cant study ex. sunday 8-14 Press 'r' to finish")
         while True:
             request_user_input(appData)
             block = appData.buffer
