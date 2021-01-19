@@ -18,6 +18,7 @@ class Data:
     self.user_args = None
     self.buffer = None
     self.local = None
+    self.function = None
     
   def auto_generate_courses(self):
     time_slots = self.create_time_slots()
