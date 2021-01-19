@@ -33,6 +33,7 @@ MIN_CHILDREN = 1
 MAX_CHILDREN = 5
 MAX_CHILDREN_OVER_POPULATED = 3
 MIN_CHILDREN_UNDER_POPULATED = 3
+MUTATION_PROB = 3
 
 def bad_grader(bad_schedules):
   global BAD_MAX_GRADE 
@@ -244,6 +245,7 @@ class User():
             population = self.flood(population)
             population = self.dimograph(population)
             children = self.concieve(population)
+            self.mutate(children)
             self.birth(population,children)
             population = self.dimograph(population)
             if self.has_optimal(population):
@@ -312,8 +314,14 @@ class User():
                     child_genes = []
                     child = None
                     for j in range(0,num_of_genes):
-                        parent = random.choice(parents)
-                        gen = parent[j]
+                        gen = None
+                        coin = random.randint(1,100)
+                        if coin <= MUTATION_PROB:
+                            course = self.ordered_courses[i]
+                            gen = random.choice(course.groups)
+                        else:
+                            parent = random.choice(parents)
+                            gen = parent[j]
                         child_genes.append(gen)
                     child = schedule_py.Schedule(child_genes)
                     children.append(child)
