@@ -36,9 +36,11 @@ class Schedule():
     self.updated = False
     self.grade = 0
     self.table = []
+    self.groups = []
     self.clashing_hours = 0
     self.type = BAD
     self.windows = 0
+    self.window_list = []
     self.morning_hours = 0
     self.evening_hours = 0
     self.days = 0
@@ -150,6 +152,9 @@ class Schedule():
         inCollege = True
       elif i<12 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
 
     inCollege = False  
@@ -160,6 +165,9 @@ class Schedule():
         inCollege = True
       elif i<25 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
 
     inCollege = False
@@ -170,6 +178,9 @@ class Schedule():
         inCollege = True
       elif i<38 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
 
     inCollege = False
@@ -180,6 +191,9 @@ class Schedule():
         inCollege = True
       elif i<51 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
 
     inCollege = False
@@ -190,6 +204,9 @@ class Schedule():
         inCollege = True
       elif i<64 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
 
     inCollege = False
@@ -200,6 +217,9 @@ class Schedule():
         inCollege = True
       elif i<72 and inCollege == True:
         if self.table[i] == 0 and self.table[i+1] == 1:
+          index = i,i
+          daytime = self.index_to_dayTime(index)
+          self.window_list.append(daytime)
           count += 1
     return count
 
@@ -208,13 +228,13 @@ class Schedule():
     evening_count = 0
     days = []
     for i in range (0,73):
-      index = i,i
-      day_time = self.index_to_dayTime(index)
-      day_time = format_day_time(day_time)
-      if day_time[0] not in days:
-        days.append(day_time[0])
-      for j in range(day_time[1],day_time[2]):
-        if j < EVENING_START_TIME:
+      if self.table[i] == 1:
+        index = i,i
+        day_time = self.index_to_dayTime(index)
+        day_time = format_day_time(day_time)
+        if day_time[0] not in days:
+          days.append(day_time[0])
+        if day_time[1] < EVENING_START_TIME:
           morning_count += 1
         else:
           evening_count += 1
@@ -230,14 +250,31 @@ class Schedule():
         if index == (-1,-1):
           gui.print_error("Cannot index group " + str(group))
         else:
+          self.groups.append(group)
           for i in range(index[0],index[1]+1):
             self.insert(i)
       if self.clashing_hours == 0:
         self.type = GOOD
         self.windows = self.count_windows()
+        self.count_day_mor_eve()
     
   def insert(self,hour):
     if self.table[hour] == 1:
       self.clashing_hours += 1
     elif self.table[hour] == 0:
       self.table[hour] = 1
+
+  def get_schedule_for(self,day,hour):
+    if self.type == BAD:
+      return None
+    else:
+      total_groups_number = len(self.groups)
+      for i in range(0,total_groups_number):
+        daytime = format_day_time(self.groups[i])
+        group_day = daytime[0]
+        group_start_hour = daytime[1]
+        group_end_hour = daytime[2]
+        if day == group_day and group_start_hour <= hour and group_end_hour > hour:
+          return i
+      return None
+    

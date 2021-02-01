@@ -3,29 +3,38 @@ import gui
 import random
 import schedule as schedule_py
 import math
+TOP_GRADE = 0
 MAX_MORNINGS_FUNCTION = 0
 MAX_EVENINGS_FUNCTION = 1
 MINIMUM_DAYS_FUNCTION = 2
 
 # MORNING 08:00 - 14:00
 # EVENING 14:00 - 21:00
-
+FIRST_CREATION = True
+RECREATION_TIMES = 5
+END_OF_TIMES = 50
 INITIAL_POPULATION = 100
-BAD_MAX_GRADE = 59
-GOOD_MIN_GRADE = BAD_MAX_GRADE + 1
-GOOD_WINDOWS_MAX_GRADE = 20
-GOOD_FUNCTION_MAX_GRADE = 80
-GOOD_MIN_GRADE = BAD_MAX_GRADE + 1
-GOOD_MAX_GRADE = 100
-END_OF_TIMES = 1000
-MAX_MORNINGS = 36
-MAX_EVENINGS = 37
-MAX_DAYS = 6
-MIN_DAYS = 1
 OVER_POPULATION_NUMBER = math.ceil(INITIAL_POPULATION*3.5)
 OVER_POPULATED = False
 UNDER_POPULATION_NUMBER = math.floor(INITIAL_POPULATION*0.7)
 UNDER_POPULATED = False
+
+BAD_MAX_GRADE = 59
+GOOD_MIN_GRADE = BAD_MAX_GRADE + 1
+
+GOOD_MAX_GRADE = 100
+GOOD_WINDOWS_MAX_GRADE =50
+GOOD_FUNCTION_MAX_GRADE = GOOD_MAX_GRADE-GOOD_WINDOWS_MAX_GRADE
+
+GOOD_WINDOWS_MAX_GRADE_DAYS = 0
+GOOD_DAYS_MAX_GRADE = GOOD_MAX_GRADE - GOOD_WINDOWS_MAX_GRADE_DAYS
+
+TOTAL_SCHEDULE_HOURS = 73
+MAX_MORNINGS = 36
+MAX_EVENINGS = TOTAL_SCHEDULE_HOURS-MAX_MORNINGS
+
+MAX_DAYS = 6
+MIN_DAYS = 1
 NORMAL_FLOOD_FACTOR = 0.5
 OVER_POPULATED_FLOOD_FACTOR = 0.7
 UNDER_POPULATED_FLOOD_FACTOR = 0.3
@@ -33,12 +42,13 @@ MIN_CHILDREN = 1
 MAX_CHILDREN = 5
 MAX_CHILDREN_OVER_POPULATED = 3
 MIN_CHILDREN_UNDER_POPULATED = 3
-MUTATION_PROB = 3
+MUTATION_PROB = 90
 
 def bad_grader(bad_schedules):
   global BAD_MAX_GRADE 
   if len(bad_schedules) == 0:
     gui.print_error("Cannot grade , no schedules recieved")
+  else:
     min_clash = float('inf')
     max_clash = 0
     for schedule in bad_schedules:
@@ -54,9 +64,12 @@ def bad_grader(bad_schedules):
       for schedule in bad_schedules:
         i = schedule.clashing_hours
         schedule.grade = ((max_clash-i)/(max_clash-min_clash))*BAD_MAX_GRADE
+
 def good_grader(good_schedules,target):
+    global GOOD_WINDOWS_MAX_GRADE, MAX_MORNINGS_FUNCTION,MAX_MORNINGS,GOOD_FUNCTION_MAX_GRADE,MAX_EVENINGS_FUNCTION,MAX_EVENINGS,MAX_DAYS,MINIMUM_DAYS_FUNCTION,GOOD_MIN_GRADE,GOOD_MAX_GRADE,GOOD_DAYS_MAX_GRADE,GOOD_WINDOWS_MAX_GRADE_DAYS
     if len(good_schedules) == 0:
         gui.print_error("Cannot grade , no schedules recieved")
+        return
     min_windows = float('inf')
     max_windows = 0
     for schedule in good_schedules:
@@ -67,22 +80,27 @@ def good_grader(good_schedules,target):
         min_windows = windows
     if max_windows - min_windows == 0:
       for schedule in good_schedules:
-        schedule.grade = GOOD_WINDOWS_MAX_GRADE
+        if target != MINIMUM_DAYS_FUNCTION:
+            schedule.grade = GOOD_WINDOWS_MAX_GRADE
+        else:
+            schedule.grade = GOOD_WINDOWS_MAX_GRADE_DAYS
     else:
       for schedule in good_schedules:
-        i = schedule.clashing_hours
-        schedule.grade = ((max_windows-i)/(max_windows-min_windows))*GOOD_WINDOWS_MAX_GRADE
-
-    schedule.count_day_mor_eve()
+        i = schedule.windows
+        if target != MINIMUM_DAYS_FUNCTION:
+            schedule.grade = ((max_windows-i)/(max_windows-min_windows))*GOOD_WINDOWS_MAX_GRADE
+        else:
+            schedule.grade = ((max_windows-i)/(max_windows-min_windows))*GOOD_WINDOWS_MAX_GRADE_DAYS
     if target == MAX_MORNINGS_FUNCTION:
-        i = schedule.mornning_hours
+        i = schedule.morning_hours
         schedule.grade += (i/MAX_MORNINGS)*GOOD_FUNCTION_MAX_GRADE
     elif target == MAX_EVENINGS_FUNCTION:
         i = schedule.evening_hours
         schedule.grade += (i/MAX_EVENINGS)*GOOD_FUNCTION_MAX_GRADE
     elif target == MINIMUM_DAYS_FUNCTION:
         i = schedule.days
-        schedule.grade += ((MAX_DAYS-i)/(MAX_DAYS - 1))*GOOD_FUNCTION_MAX_GRADE
+        schedule.grade = ((MAX_DAYS-i)/(MAX_DAYS - 1))*GOOD_DAYS_MAX_GRADE
+        # schedule.grade += ((MAX_DAYS-i)/(MAX_DAYS - 1))*GOOD_FUNCTION_MAX_GRADE
     #CURRENTLY GRADES 0 - 100 ---> 60 - 100
     for schedule in good_schedules:
         i = schedule.grade
@@ -102,7 +120,7 @@ class User():
         if status == 0:
             gui.print_error(msg)
         else:
-            gui.print_title("Data collection finished. Optimizing ...")
+            gui.print_title("Data collection finished")
             best = self.optimize()
             self.conclude(best)
             
@@ -152,8 +170,10 @@ class User():
         if len(all_courses) >= 74:
             return 0, "Total number of courses is greater than size of schedule"
         if len(all_courses) == 0:
-            return 0 , "Course list is empty"   
-        self.appData.local = all_courses
+            return 0 , "Course list is empty"
+        for course in all_courses:
+            course.get_split_groups()  
+        self.appData.local = sorted(all_courses)
         return 1, ""
     def filter_redo_courses(self,redo_courses,year):
         remove_list = []
@@ -220,8 +240,8 @@ class User():
             if course in all_courses:
                 all_courses.remove(course)
     def get_function(self):
-        gui.print_title("What do you want to achieve ? [1]. Max mornings\n [2]. Max Evenings \n [3]. Minimum Days")
-        gui.request_user_input()
+        gui.print_title("What do you want to achieve ?\n [1]. Max mornings\n [2]. Max Evenings \n [3]. Minimum Days")
+        gui.request_user_input(self.appData)
         while True:
             if self.appData.buffer == '1':
                 self.appData.function = MAX_MORNINGS_FUNCTION
@@ -230,36 +250,59 @@ class User():
                 self.appData.function = MAX_EVENINGS_FUNCTION
                 break
             if self.appData.buffer == '3':
-                self.appData.buffer = MINIMUM_DAYS_FUNCTION
+                self.appData.function = MINIMUM_DAYS_FUNCTION
                 break
 
     def optimize(self):
         self.get_function()
-        global END_OF_TIMES
+        global END_OF_TIMES,RECREATION_TIMES
         population = []
         year = 0
-        self.initial(population)
-        while year != END_OF_TIMES:
-            self.grade(population)
-            population = self.dimograph(population)
-            population = self.flood(population)
-            population = self.dimograph(population)
-            children = self.concieve(population)
-            self.mutate(children)
-            self.birth(population,children)
-            population = self.dimograph(population)
-            if self.has_optimal(population):
-                break
-            year += 1
-        return population[len(population)-1]
+        all_times_alpha = None
+        for recration in range(0,RECREATION_TIMES):
+            gui.print_body("Working . . . Recreation Number: " + str(recration+1))
+            alpha = None
+            self.initial(population)
+            while year != END_OF_TIMES:
+                self.grade(population)
+                population = self.dimograph(population)
+                population = self.flood(population)
+                population = self.dimograph(population)
+                children = self.concieve(population)
+                self.birth(population,children)
+                population = self.dimograph(population)
+                if self.has_optimal(population,year):
+                    break
+                year += 1
+            alpha = population[len(population)-1]
+            all_times_alpha = self.duo(all_times_alpha,alpha,self.appData.function)
+        return all_times_alpha
     def initial(self,population):
-        global INITIAL_POPULATION
-        for course in self.appData.local:
-            self.ordered_courses.append(course)
+        global INITIAL_POPULATION, FIRST_CREATION
+        if FIRST_CREATION == True:
+            FIRST_CREATION = False
+            for course in self.appData.local:
+                self.ordered_courses.append(course)
         for i in range(0,INITIAL_POPULATION):
+            genes = []
             for course in self.ordered_courses:
-                genes = []
-                gen = random.choice(course.groups)
+                gen = None
+                if self.appData.function == 0 and len(course.morning_groups) != 0: gen = random.choice(course.morning_groups)
+                elif self.appData.function == 1 and len(course.evening_groups) != 0: gen = random.choice(course.evening_groups)
+                elif self.appData.function == 2 :
+                    if len(course.sunday_groups) != 0:
+                        gen = random.choice(course.sunday_groups)
+                    elif len(course.monday_groups) != 0:
+                        gen = random.choice(course.monday_groups)
+                    elif len(course.tuesday_groups) != 0:
+                        gen = random.choice(course.tuesday_groups)
+                    elif len(course.wednesday_groups) != 0:
+                        gen = random.choice(course.wednesday_groups)
+                    elif len(course.thursday_groups) != 0:
+                        gen = random.choice(course.thursday_groups)
+                    elif len(course.friday_groups) != 0:
+                        gen = random.choice(course.friday_groups)                   
+                elif len(course.groups) != 0: gen = random.choice(course.groups)
                 genes.append(gen)
             citizen = schedule_py.Schedule(genes)
             population.append(citizen)   
@@ -272,7 +315,7 @@ class User():
             elif citizen.type == schedule_py.BAD:
                 bad_citizens.append(citizen)
         bad_grader(bad_citizens)
-        good_grader(good_citizens,self.appData.buffer)
+        good_grader(good_citizens,self.appData.function)
     def dimograph(self,population):
         global OVER_POPULATION_NUMBER,UNDER_POPULATION_NUMBER,OVER_POPULATED,UNDER_POPULATED
         population = sorted(population)
@@ -289,7 +332,7 @@ class User():
     def flood(self,population):
         global OVER_POPULATED,UNDER_POPULATED,OVER_POPULATED_FLOOD_FACTOR,UNDER_POPULATED_FLOOD_FACTOR,NORMAL_FLOOD_FACTOR
         population_number = len(population)
-        number_to_flood = 0
+        number_to_flood = 0 
         if OVER_POPULATED: number_to_flood = math.floor(population_number*OVER_POPULATED_FLOOD_FACTOR)
         elif UNDER_POPULATED: number_to_flood = math.floor(population_number*UNDER_POPULATED_FLOOD_FACTOR)
         else: number_to_flood = math.floor(population_number*NORMAL_FLOOD_FACTOR)
@@ -298,30 +341,31 @@ class User():
                 population.pop(0)
         return population
     def concieve(self,population):
-        global OVER_POPULATED,UNDER_POPULATED,MAX_CHILDREN_OVER_POPULATED,MIN_CHILDREN_UNDER_POPULATED,MIN_CHILDREN,MAX_CHILDREN
+        global OVER_POPULATED,UNDER_POPULATED,MAX_CHILDREN_OVER_POPULATED,MIN_CHILDREN_UNDER_POPULATED,MIN_CHILDREN,MAX_CHILDREN,TOTAL_SCHEDULE_HOURS
         i=0
-        num_of_genes = 0
         children = []
-        if len(population)>0:
-            num_of_genes = len(population[0])
-            while i<len(population)-1:
+        len_population = len(population)
+        if len_population>0:
+            num_of_genes = len(population[0].groups)
+            while i<len_population-1:
                 parents = [population[i],population[i+1]]
                 children_number = 0
                 if OVER_POPULATED: children_number = random.randint(MIN_CHILDREN,MAX_CHILDREN_OVER_POPULATED)
                 elif UNDER_POPULATED: children_number = random.randint(MIN_CHILDREN_UNDER_POPULATED,MAX_CHILDREN)
                 else: children_number = random.randint(MIN_CHILDREN,MAX_CHILDREN)
-                for i in range(0,children_number):
+                for num in range(0,children_number):
                     child_genes = []
                     child = None
                     for j in range(0,num_of_genes):
                         gen = None
                         coin = random.randint(1,100)
                         if coin <= MUTATION_PROB:
-                            course = self.ordered_courses[i]
-                            gen = random.choice(course.groups)
+                            course = self.ordered_courses[j]
+                            if len(course.groups) != 0:
+                                gen = random.choice(course.groups)
                         else:
                             parent = random.choice(parents)
-                            gen = parent[j]
+                            gen = parent.groups[j]
                         child_genes.append(gen)
                     child = schedule_py.Schedule(child_genes)
                     children.append(child)
@@ -330,19 +374,48 @@ class User():
     def birth(self,population,children):
         for child in children:
             population.append(child)
-    def has_optimal(self,population):
+    def has_optimal(self,population,year):
+        global TOP_GRADE
         alpha = population[len(population)-1]
+        if alpha.grade > TOP_GRADE:
+            TOP_GRADE = alpha.morning_hours
         return alpha.grade == 100
+    
+    def duo(self,all_time_alpha,alpha,target):
+        if all_time_alpha is None:
+            return alpha
+        if alpha is None:
+            return all_time_alpha
+        if target == MAX_MORNINGS_FUNCTION:
+            if alpha.windows < all_time_alpha.windows and alpha.morning_hours > all_time_alpha.morning_hours:
+                return alpha
+            return all_time_alpha
+        elif target == MAX_EVENINGS_FUNCTION:
+            if alpha.windows < all_time_alpha.windows and alpha.evening_hours > all_time_alpha.evening_hours:
+                return alpha
+            return all_time_alpha
+        elif target == MINIMUM_DAYS_FUNCTION:
+            if alpha.days < all_time_alpha.days:
+                return alpha
+            return all_time_alpha
     
     def conclude(self,best):
         if best.type == schedule_py.BAD:
                 gui.print_body("Couldnt find optimal schedule")
         elif best.type == schedule_py.GOOD:
             gui.print_title("Optimal Solution:")
-            num_of_courses = len(best)
+            num_of_courses = len(best.groups)
             for i in range(0,num_of_courses):
-                gui.print_body("Course " + str(self.ordered_courses[i]) + ": " + str(best[i])+ "\n")
+                gui.print_body("Course " + str(self.ordered_courses[i].number) + ": " + str(best.groups[i]))
+            gui.print_table(best,self.ordered_courses)
             gui.print_body("Total hours in morning: " + str(best.morning_hours))
             gui.print_body("Total hours in evening: " + str(best.evening_hours))
             gui.print_body("Total days: " + str(best.days))
             gui.print_body("Total windows: " + str(best.windows))
+            grade = 100
+            num_of_courses = len(self.ordered_courses)
+            if num_of_courses != 0:
+                if self.appData.function == MAX_MORNINGS_FUNCTION: grade = (best.morning_hours/num_of_courses)*100
+                elif self.appData.function == MAX_EVENINGS_FUNCTION: grade = (best.evening_hours/num_of_courses)*100
+                elif self.appData.function == MINIMUM_DAYS_FUNCTION: grade = ((6-best.days)/5)*100
+            gui.print_body("Total grade: " + str(grade))

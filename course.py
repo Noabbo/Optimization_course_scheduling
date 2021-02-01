@@ -9,6 +9,14 @@ class Course:
         self.prior = document["pre-courses"]
         self.rating = self.get_rating(document)
         self.duration = self.get_duration()
+        self.morning_groups = []
+        self.evening_groups = []
+        self.sunday_groups = []
+        self.monday_groups = []
+        self.tuesday_groups = []
+        self.wednesday_groups = []
+        self.thursday_groups = []
+        self.friday_groups = []
     
     def __eq__(self, other):
         return self.number == other.number   
@@ -55,4 +63,54 @@ class Course:
                     return True
         return False
 
-                
+    def is_morning(self,group):
+        daytime = schedule.format_day_time(group)
+        start = daytime[1]
+        finish = daytime[2]
+        if start < 14 and finish <=14:
+            return True
+        elif start < 14 and finish > 14:
+            if 14-start >= finish -14:
+                return True
+        return False
+    
+    def is_sunday(self,group):
+        return schedule.format_day_time(group)[0] == "sunday"
+    
+    def is_monday(self,group):
+        return schedule.format_day_time(group)[0] == "monday"
+
+    def is_tuesday(self,group):
+        return schedule.format_day_time(group)[0] == "tuesday"
+    
+    def is_wednesday(self,group):
+        return schedule.format_day_time(group)[0] == "wednesday"
+    
+    def is_thursday(self,group):
+        return schedule.format_day_time(group)[0] == "thursday"
+    
+    def is_friday(self,group):
+        return schedule.format_day_time(group)[0] == "friday"
+
+    def get_split_groups(self):
+        for group in self.groups:
+            if self.is_morning(group):
+                self.morning_groups.append(group)
+            else:
+                self.evening_groups.append(group)
+            
+            if self.is_sunday(group):
+                self.sunday_groups.append(group)
+            elif self.is_monday(group):
+                self.monday_groups.append(group)
+            elif self.is_tuesday(group):
+                self.tuesday_groups.append(group)
+            elif self.is_wednesday(group):
+                self.wednesday_groups.append(group)
+            elif self.is_thursday(group):
+                self.thursday_groups.append(group)
+            elif self.is_friday(group):
+                self.friday_groups.append(group)
+        
+
+        
