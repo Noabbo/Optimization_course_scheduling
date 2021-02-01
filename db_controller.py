@@ -1,4 +1,4 @@
-import mongo_client
+import pymongo as mongo_client
 import gui
 class DataBaseController:
     def __init__(self):

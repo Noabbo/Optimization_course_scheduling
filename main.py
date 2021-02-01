@@ -1,10 +1,10 @@
 import gui
 import error_handler
 import data
-import schedule
+import Components.schedule as schedule
 import db_controller
-import admin
-import user
+import Users.admin as admin
+import Users.user as user
 appData = data.Data()
 error_handler = error_handler.ErrorHandler()
 gui.welcome_page(appData)

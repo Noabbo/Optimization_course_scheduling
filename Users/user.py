@@ -1,7 +1,7 @@
-import course as course_class
+import Components.course as course_class
 import gui
 import random
-import schedule as schedule_py
+import Components.schedule as schedule_py
 import math
 import time
 TOP_GRADE = 0

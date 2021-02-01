@@ -1,4 +1,4 @@
-import schedule
+import Components.schedule as schedule
 class Course:
     def __init__(self,document):
         self.number = document["_id"]
