@@ -3,7 +3,10 @@ import gui
 import random
 import schedule as schedule_py
 import math
+import time
 TOP_GRADE = 0
+T_START = 0
+T_FINISH = 0
 MAX_MORNINGS_FUNCTION = 0
 MAX_EVENINGS_FUNCTION = 1
 MINIMUM_DAYS_FUNCTION = 2
@@ -11,9 +14,10 @@ MINIMUM_DAYS_FUNCTION = 2
 # MORNING 08:00 - 14:00
 # EVENING 14:00 - 21:00
 FIRST_CREATION = True
-RECREATION_TIMES = 5
-END_OF_TIMES = 50
-INITIAL_POPULATION = 100
+ALL_TIME_CHANGED = False
+RECREATION_TIMES = 100
+END_OF_TIMES = 10
+INITIAL_POPULATION = 10
 OVER_POPULATION_NUMBER = math.ceil(INITIAL_POPULATION*3.5)
 OVER_POPULATED = False
 UNDER_POPULATION_NUMBER = math.floor(INITIAL_POPULATION*0.7)
@@ -47,7 +51,7 @@ MUTATION_PROB = 90
 def bad_grader(bad_schedules):
   global BAD_MAX_GRADE 
   if len(bad_schedules) == 0:
-    gui.print_error("Cannot grade , no schedules recieved")
+      return
   else:
     min_clash = float('inf')
     max_clash = 0
@@ -68,7 +72,6 @@ def bad_grader(bad_schedules):
 def good_grader(good_schedules,target):
     global GOOD_WINDOWS_MAX_GRADE, MAX_MORNINGS_FUNCTION,MAX_MORNINGS,GOOD_FUNCTION_MAX_GRADE,MAX_EVENINGS_FUNCTION,MAX_EVENINGS,MAX_DAYS,MINIMUM_DAYS_FUNCTION,GOOD_MIN_GRADE,GOOD_MAX_GRADE,GOOD_DAYS_MAX_GRADE,GOOD_WINDOWS_MAX_GRADE_DAYS
     if len(good_schedules) == 0:
-        gui.print_error("Cannot grade , no schedules recieved")
         return
     min_windows = float('inf')
     max_windows = 0
@@ -255,13 +258,22 @@ class User():
 
     def optimize(self):
         self.get_function()
-        global END_OF_TIMES,RECREATION_TIMES
+        global END_OF_TIMES,RECREATION_TIMES,ALL_TIME_CHANGED,T_START
+        decrease_list = ["friday 08-21","thursday 08-21","wednesday 08-21","tuesday 08-21","monday 08-21"]
+        pos = 0
         population = []
-        year = 0
         all_times_alpha = None
+        T_START = time.time()
+        gui.print_body("Working . . .")
         for recration in range(0,RECREATION_TIMES):
-            gui.print_body("Working . . . Recreation Number: " + str(recration+1))
+            if ALL_TIME_CHANGED == True:
+                for course in self.ordered_courses:
+                    course.remove_unavailable_groups(decrease_list[pos])
+                if pos < 4:
+                    pos += 1
             alpha = None
+            population = []
+            year = 0
             self.initial(population)
             while year != END_OF_TIMES:
                 self.grade(population)
@@ -382,24 +394,20 @@ class User():
         return alpha.grade == 100
     
     def duo(self,all_time_alpha,alpha,target):
+        global ALL_TIME_CHANGED
         if all_time_alpha is None:
             return alpha
         if alpha is None:
+            ALL_TIME_CHANGED = False
             return all_time_alpha
-        if target == MAX_MORNINGS_FUNCTION:
-            if alpha.windows < all_time_alpha.windows and alpha.morning_hours > all_time_alpha.morning_hours:
-                return alpha
-            return all_time_alpha
-        elif target == MAX_EVENINGS_FUNCTION:
-            if alpha.windows < all_time_alpha.windows and alpha.evening_hours > all_time_alpha.evening_hours:
-                return alpha
-            return all_time_alpha
-        elif target == MINIMUM_DAYS_FUNCTION:
-            if alpha.days < all_time_alpha.days:
-                return alpha
-            return all_time_alpha
+        if alpha.grade >= all_time_alpha.grade:
+            ALL_TIME_CHANGED = True
+            return alpha
+        ALL_TIME_CHANGED = False
+        return all_time_alpha
     
     def conclude(self,best):
+        global T_START,T_FINISH, RECREATION_TIMES, END_OF_TIMES,INITIAL_POPULATION,MUTATION_PROB
         if best.type == schedule_py.BAD:
                 gui.print_body("Couldnt find optimal schedule")
         elif best.type == schedule_py.GOOD:
@@ -419,3 +427,5 @@ class User():
                 elif self.appData.function == MAX_EVENINGS_FUNCTION: grade = (best.evening_hours/num_of_courses)*100
                 elif self.appData.function == MINIMUM_DAYS_FUNCTION: grade = ((6-best.days)/5)*100
             gui.print_body("Total grade: " + str(grade))
+            gui.print_body("\nTotal calculation time: " + str(time.time()-T_START)+" seconds")
+            gui.print_body("Recreation times: " + str(RECREATION_TIMES) + "\n" + "End of times: " + str(END_OF_TIMES) + " generations\n" + "Inital population: " + str(INITIAL_POPULATION) + " citizens\n" + "Mutation Probability: " + str(MUTATION_PROB) + "%\n")

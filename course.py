@@ -53,6 +53,7 @@ class Course:
             if group in self.groups:
                 self.groups.remove(group)
         remove_list.clear()
+        self.get_split_groups()
 
     def clashing(self,other):
         for this_group in self.groups:
@@ -93,6 +94,14 @@ class Course:
         return schedule.format_day_time(group)[0] == "friday"
 
     def get_split_groups(self):
+        self.morning_groups = []
+        self.evening_groups = []
+        self.sunday_groups = []
+        self.monday_groups = []
+        self.tuesday_groups = []
+        self.wednesday_groups = []
+        self.thursday_groups = []
+        self.friday_groups = []
         for group in self.groups:
             if self.is_morning(group):
                 self.morning_groups.append(group)
