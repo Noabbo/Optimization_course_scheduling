@@ -45,13 +45,13 @@ def welcome_page(appData):
         appData.set_user_args((year,redo_courses,optional_courses,unavailable))
 
 def print_title(msg):
-    print("\033[92m"+ str(msg) + "\033[0m")
+    print(str(msg))
 
 def print_body(msg):
     print(msg)
 
 def print_error(msg):
-    print("\033[91m"+ str(msg) + "\033[0m")
+    print(str(msg))
 
 def admin_page(appData):
     print_title("[1]. Auto insert\n[2]. Clear Collection\n[3]. Break")
