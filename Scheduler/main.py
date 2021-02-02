@@ -17,3 +17,5 @@ if appData.user_args != appData.ADMIN_KEY:
 else:
     appData.set_db_controller(db_controller.DataBaseController())
     admin.Admin(appData).run()
+print("Press any key to exit")
+gui.request_user_input(None)
