@@ -4,6 +4,12 @@ import random
 import Components.schedule as schedule_py
 import math
 import time
+
+RECREATION_TIMES = 100 #DEFAULT 100
+END_OF_TIMES = 10 #DEFAULT 10
+INITIAL_POPULATION = 10 #DEFAULT 10
+MUTATION_PROB = 90
+
 TOP_GRADE = 0
 T_START = 0
 T_FINISH = 0
@@ -15,9 +21,6 @@ MINIMUM_DAYS_FUNCTION = 2
 # EVENING 14:00 - 21:00
 FIRST_CREATION = True
 ALL_TIME_CHANGED = False
-RECREATION_TIMES = 100
-END_OF_TIMES = 10
-INITIAL_POPULATION = 10
 OVER_POPULATION_NUMBER = math.ceil(INITIAL_POPULATION*3.5)
 OVER_POPULATED = False
 UNDER_POPULATION_NUMBER = math.floor(INITIAL_POPULATION*0.7)
@@ -46,7 +49,7 @@ MIN_CHILDREN = 1
 MAX_CHILDREN = 5
 MAX_CHILDREN_OVER_POPULATED = 3
 MIN_CHILDREN_UNDER_POPULATED = 3
-MUTATION_PROB = 90
+
 
 def bad_grader(bad_schedules):
   global BAD_MAX_GRADE 
@@ -264,8 +267,8 @@ class User():
         population = []
         all_times_alpha = None
         T_START = time.time()
-        gui.print_body("Working . . .")
         for recration in range(0,RECREATION_TIMES):
+            gui.print_body("Working . . . recration number" + str(recration))
             if ALL_TIME_CHANGED == True:
                 for course in self.ordered_courses:
                     course.remove_unavailable_groups(decrease_list[pos])
