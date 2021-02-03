@@ -7,7 +7,12 @@ class DataBaseController:
         self.collection = self.db["Courses"]
     
     def auto_insert(self,appData):
-        items = appData.auto_generate_courses()
+        # items = appData.auto_generate_courses()
+        items = [
+            {"_id":0,"name":"course_name","year":4,"is_must":True,"groups":["group 1","group 2"],"pre-courses":[0]},
+            
+            
+            ]
         try:
             self.collection.insert_many(items)
         except Exception:
