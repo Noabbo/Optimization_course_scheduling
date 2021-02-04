@@ -13,7 +13,7 @@ def average(l):
     for item in l:
         total += item
     return total/len(l) 
-if argv[1] != "-t":
+if len(argv) == 1:
     appData = data.Data()
     error_handler = error_handler.ErrorHandler()
     gui.welcome_page(appData)
@@ -28,7 +28,7 @@ if argv[1] != "-t":
         admin.Admin(appData).run()
     print("Press any key to exit")
     gui.request_user_input(appData)
-else:
+elif argv[1] == "-t":
     flag = argv[1]
     test_times = int(argv[2])
     creation_parameters = ast.literal_eval(argv[3])
