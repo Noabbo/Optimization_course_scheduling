@@ -8,7 +8,11 @@ import time
 RECREATION_TIMES = 100 #DEFAULT 100
 END_OF_TIMES = 10 #DEFAULT 10
 INITIAL_POPULATION = 10 #DEFAULT 10
-MUTATION_PROB = 90
+MUTATION_PROB = 90 #Default 90
+GOOD_WINDOWS_MAX_GRADE = 30 #Default 30
+
+STATISTICS_MODE = False
+PRE_PROCESS = False
 
 TOP_GRADE = 0
 T_START = 0
@@ -30,7 +34,6 @@ BAD_MAX_GRADE = 59
 GOOD_MIN_GRADE = BAD_MAX_GRADE + 1
 
 GOOD_MAX_GRADE = 100
-GOOD_WINDOWS_MAX_GRADE =50
 GOOD_FUNCTION_MAX_GRADE = GOOD_MAX_GRADE-GOOD_WINDOWS_MAX_GRADE
 
 GOOD_WINDOWS_MAX_GRADE_DAYS = 0
@@ -121,14 +124,19 @@ class User():
         self.ordered_courses = []
     
     def run(self):
-        gui.print_title("System collecting data ... please wait")
-        status,msg = self.preprocess()
-        if status == 0:
-            gui.print_error(msg)
-        else:
-            gui.print_title("Data collection finished")
-            best = self.optimize()
-            self.conclude(best)
+        global PRE_PROCESS,STATISTICS_MODE
+        status = 0
+        msg = ""
+        if (STATISTICS_MODE and not PRE_PROCESS) or not STATISTICS_MODE:
+            gui.print_title("System collecting data ... please wait")
+            status,msg = self.preprocess()
+            if status == 0:
+                gui.print_error(msg)
+    
+        PRE_PROCESS = True
+        best = self.optimize()
+        self.conclude(best)
+        return best
             
             
 
@@ -246,34 +254,27 @@ class User():
             if course in all_courses:
                 all_courses.remove(course)
     def get_function(self):
-        gui.print_title("What do you want to achieve ?\n [1]. Max mornings\n [2]. Max Evenings \n [3]. Minimum Days")
-        gui.request_user_input(self.appData)
-        while True:
-            if self.appData.buffer == '1':
-                self.appData.function = MAX_MORNINGS_FUNCTION
-                break
-            if self.appData.buffer == '2':
-                self.appData.function = MAX_EVENINGS_FUNCTION
-                break
-            if self.appData.buffer == '3':
-                self.appData.function = MINIMUM_DAYS_FUNCTION
-                break
+        if self.appData.function == None:
+            gui.print_title("What do you want to achieve ?\n [1]. Max mornings\n [2]. Max Evenings \n [3]. Minimum Days")
+            gui.request_user_input(self.appData)
+            while True:
+                if self.appData.buffer == '1':
+                    self.appData.function = MAX_MORNINGS_FUNCTION
+                    break
+                if self.appData.buffer == '2':
+                    self.appData.function = MAX_EVENINGS_FUNCTION
+                    break
+                if self.appData.buffer == '3':
+                    self.appData.function = MINIMUM_DAYS_FUNCTION
+                    break
 
     def optimize(self):
         self.get_function()
         global END_OF_TIMES,RECREATION_TIMES,ALL_TIME_CHANGED,T_START
-        decrease_list = ["friday 08-21","thursday 08-21","wednesday 08-21","tuesday 08-21","monday 08-21"]
-        pos = 0
         population = []
         all_times_alpha = None
         T_START = time.time()
         for recration in range(0,RECREATION_TIMES):
-            gui.print_body("Working . . . recration number" + str(recration))
-            if ALL_TIME_CHANGED == True:
-                for course in self.ordered_courses:
-                    course.remove_unavailable_groups(decrease_list[pos])
-                if pos < 4:
-                    pos += 1
             alpha = None
             population = []
             year = 0
@@ -414,8 +415,19 @@ class User():
         if best.type == schedule_py.BAD:
                 gui.print_body("Couldnt find optimal schedule")
         elif best.type == schedule_py.GOOD:
-            gui.print_title("Optimal Solution:")
             num_of_courses = len(best.groups)
+            total_hours = 0
+            for course in self.ordered_courses:
+                total_hours += course.duration
+            if total_hours != 0:
+                if self.appData.function == MAX_MORNINGS_FUNCTION: 
+                    best.grade =((((TOTAL_SCHEDULE_HOURS/2)-best.windows)/(TOTAL_SCHEDULE_HOURS/2))*GOOD_WINDOWS_MAX_GRADE) + (best.morning_hours/total_hours)*GOOD_FUNCTION_MAX_GRADE
+                elif self.appData.function == MAX_EVENINGS_FUNCTION: 
+                    best.grade = ((((TOTAL_SCHEDULE_HOURS/2)-best.windows)/(TOTAL_SCHEDULE_HOURS/2))*GOOD_WINDOWS_MAX_GRADE) + (best.evening_hours/total_hours)*GOOD_FUNCTION_MAX_GRADE
+                elif self.appData.function == MINIMUM_DAYS_FUNCTION: 
+                    best.grade = ((6-best.days)/5)*100
+        if not STATISTICS_MODE:
+            gui.print_title("Optimal Solution:")
             for i in range(0,num_of_courses):
                 gui.print_body("Course " + str(self.ordered_courses[i].number) + ": " + str(best.groups[i]))
             gui.print_table(best,self.ordered_courses)
@@ -423,12 +435,7 @@ class User():
             gui.print_body("Total hours in evening: " + str(best.evening_hours))
             gui.print_body("Total days: " + str(best.days))
             gui.print_body("Total windows: " + str(best.windows))
-            grade = 100
-            num_of_courses = len(self.ordered_courses)
-            if num_of_courses != 0:
-                if self.appData.function == MAX_MORNINGS_FUNCTION: grade = (best.morning_hours/num_of_courses)*100
-                elif self.appData.function == MAX_EVENINGS_FUNCTION: grade = (best.evening_hours/num_of_courses)*100
-                elif self.appData.function == MINIMUM_DAYS_FUNCTION: grade = ((6-best.days)/5)*100
-            gui.print_body("Total grade: " + str(grade))
+            gui.print_body("Total grade: " + str(best.grade))
             gui.print_body("\nTotal calculation time: " + str(time.time()-T_START)+" seconds")
             gui.print_body("Recreation times: " + str(RECREATION_TIMES) + "\n" + "End of times: " + str(END_OF_TIMES) + " generations\n" + "Inital population: " + str(INITIAL_POPULATION) + " citizens\n" + "Mutation Probability: " + str(MUTATION_PROB) + "%\n")
+        return best
